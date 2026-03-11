@@ -117,13 +117,18 @@ std::vector<int> set_degs(int n, double lambda, double alpha){
             raw_values.push_back(calc_x(lambda, alpha));
         }
 
-        print_vector(raw_values);
+//        print_vector(raw_values);
 
         normal = set_normal(raw_values);
         deg_values = set_for_use(normal);
 
-        print_vector(normal);
-        print_vector(deg_values);
+//        print_vector(normal);
+//        print_vector(deg_values);
+        auto it = raw_values.begin();
+        for(auto& x: deg_values){
+            x = *it;
+            ++it;
+        }
 
         flag = false;
         int summ = 0;
