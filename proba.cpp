@@ -4,11 +4,20 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <bitset>
+#include <cstdlib>
+#include <format>
 
 // Генератор как глобальный объект (или можно передавать по ссылке)
 std::random_device rd;
 std::mt19937 gen(rd());
 std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+
+int randomBetween(int m, int n) {
+    std::uniform_int_distribution<> dist(m, n);
+    return dist(gen);
+}
 
 
 template <typename T>
@@ -19,6 +28,25 @@ void print_vector(std::vector<T> arr){
         std::cout << x << "\t";
     }
     std::cout << "\n";
+}
+
+
+template <typename T>
+
+void print_vector_of_vectors(std::vector<std::vector<T>> arr){
+    for(const auto x: arr){
+        print_vector(x);
+    }
+    std::cout << "\n";
+}
+
+
+void print_matrix(std::vector<std::string> matrix){
+    std::cout << "{\n";
+    for(auto it = matrix.begin(); it != matrix.end(); ++it){
+        std::cout << *it << "\n";
+    }
+    std::cout << "}\n";
 }
 
 
@@ -72,7 +100,7 @@ double calc_f(double lambda, double alpha, double x){
 }
 
 
-std::vector<double> set_normal(std::vector<double>& raw_values){
+std::vector<double> set_normal(const std::vector<double>& raw_values){
     double el_min = 1000000;
     double el_max = -1000000;
     for(auto x: raw_values){
@@ -91,7 +119,7 @@ std::vector<double> set_normal(std::vector<double>& raw_values){
 //int scaled = static_cast<int>(el_min + new_x * (el_max - el_min));
 
 
-std::vector<int> set_for_use(std::vector<double>& normal){
+std::vector<int> set_for_use(const std::vector<double>& normal){
     std::vector<int> ans;
     double el_min = *std::min_element(normal.begin(), normal.end());
     double el_max = *std::max_element(normal.begin(), normal.end());
@@ -146,71 +174,88 @@ std::vector<int> set_degs(int n, double lambda, double alpha){
 
 
 
+bool is_k_1(std::string str, int k){
+    auto it = str.begin();
+    int cnt = 0;
+    for(auto it = str.begin(); it != str.end(); ++it){
+        if(*it == '1') ++cnt;
+    }
+    if(cnt == k) return true;
+    return false;
+}
+
+std::string get_bin(int num, int length) {
+    std::string result;
+    
+    // Сначала получаем двоичное представление без ведущих нулей
+    for (int i = length - 1; i >= 0; i--) {
+        result += ((num >> i) & 1) ? '1' : '0';
+    }
+    
+    return result;
+}
+
+bool check_one(std::vector<std::string> matrix, int n){
+    for(int i = 0; i < n; ++i){
+        for(int j = 0; j < n; ++j){
+            if(matrix[i][j] != matrix[j][i]) return false;
+        }
+    }
+    return true;
+}
+
+bool check_two(std::vector<std::string> matrix, int n){
+    for(int i = 0; i < n; ++i){
+        if(matrix[i][i] == '1') return false;
+    }
+    return true;
+}
+
+std::vector<std::string> get_minor(const std::vector<std::string>& matrix, int size){
+    std::vector<std::string> minor;
+    for(int i = 0; i < size; ++i){
+        std::string str = matrix[i].substr(0, size);
+        minor.push_back(str);
+    }
+    return minor;
+}
+
+
+std::vector<std::string> create_maxtix(const int& n, const std::vector<int>& degs, const std::vector<std::vector<std::string>>& baza){  // n - size of square matrix
+    std::vector<std::string> matrix;
+    bool flag = true;
+    int k = 1;
+    while(flag){
+        matrix.clear();
+        for(int i = 0; i < n; ++i){
+            int cur_deg = degs[i];
+            int rand = randomBetween(0, baza[cur_deg-1].size()-1);
+            matrix.push_back(baza[cur_deg-1][rand]);
+        }
+//        std::cout << "ex number " << k << "\n";
+//        print_matrix(matrix);
+        std::vector<std::string> main_minor = get_minor(matrix, n/2);
+        if(check_two(matrix, n) &&  check_one(main_minor, n/2) &&  check_one(matrix, n)) flag = false;
+        ++k;
+    }
+    std::cout << k << "\n";
+    return matrix;
+}
+
+
+
+
 
 
 int main(){
 
-/*
-
-    double lambda;
-    double alpha;
-//    std::cout << "Введите значение lambda и aplpha:\n";
-//    std::cin >> lambda >> alpha;
-
-    std::vector <double> lambda_vector = {1, 1.5, 3};
-    std::vector <double> alpha_vector = {4, 0.5, 1.5, 1.6};
-
-    std::vector<std::pair <double, double>> answers;
-
-    std::vector<std::pair <double, double>> answers_for_f;
-
-        for(auto a: alpha_vector){
-            for(auto l: lambda_vector){
-    //            std::cout << l << " and " << a << " and x = " << gener(l, a) << "\n";
-                double sum = 0;
-                int cnt = 100000;
-                for(int j = 0; j < cnt; ++j){
-                    sum += calc_x(l, a);
-                }
-                std::vector<double> ans = {sum / cnt, a/l};
-                answers.push_back(std::make_pair(sum / cnt, a/l));
-                double f_value = calc_f(l, a, sum/cnt);
-                answers_for_f.push_back(std::make_pair(sum/cnt, f_value));
-            }
-        }
-
-    for(auto el: answers){
-        std::cout << el.first << " and " << el.second << "\n";
-    }
-
-
-    std::vector <double> x_vector;
-
-    for(auto el: answers){
-        x_vector.push_back(el.first);
-    }
-    double el_min = 100000;
-    double el_max = -100000;
-    for(auto el: x_vector){
-        std::cout << el << "\n";
-        if(el < el_min) el_min = el;
-        if(el > el_max) el_max = el;
-    }
-
-    std::cout << el_min << " and " << el_max << "\n";
-
-
-    for(auto el: answers_for_f){
-        std::cout << "x = " << el.first << " and f = " << el.second << "\n";
-    }
-
-*/
 
     std::cout << "Введите число вершин:\n";
 
     int n;
 
     std::cin >> n;
+
 
     double lambda = 2;
     double alpha = 3.5;
@@ -224,33 +269,35 @@ int main(){
     }
     std::cout << "\n";
 
-/*
-    std::vector<int> deg_values;
+    if(is_k_1("10011", 3)) std::cout << "yeeeah\n";
 
-    std::vector<double> raw_deg_values;
+    std::vector<std::string> vector;  // has 2^(n) strings [n = 3: 000 001 010 011 100 101 110 111]
+
+    std::vector<std::vector<std::string>> baza;
+    baza.resize(n);
 
 
 
-
-    for(int i = 0; i < n; ++i){
-        int x = static_cast<int>(calc_x(lambda, alpha));
-        deg_values.push_back(x);
-        raw_deg_values.push_back(calc_x(lambda, alpha));
+    for(int i = 1; i <= static_cast<int>(pow(2, n)); ++i){
+        std::string binary = get_bin(i, n);
+        for(int j = 1; j <= n; ++j){
+            if(is_k_1(binary, j)) baza[j-1].push_back(binary);
+        }
     }
-
-    std::vector<double> normal = set_normal(raw_deg_values);
-
-    deg_values = set_for_use(normal);
-
-    for(auto x: deg_values){
-        std::cout << x << ", ";
-    }
-    std::cout << "\n";
-    for(auto x: raw_deg_values){
-        std::cout << x << ", ";
-    }
+    std::cout << "\n\n";
+    print_vector_of_vectors(baza);
     std::cout << "\n";
 
-*/
+//    std::cout << randomBetween(2, 10);
+
+    std::vector<std::string> matrix = create_maxtix(n, deg_values, baza);
+    print_matrix(matrix);
+
+
+
 
 }
+
+
+// baza -- (vec_1, vec_2, ..., vec_n), где vec_i -- вектор, содержащий строки с i количеством единиц
+// is_k_1(st) -- проверка, что в строке содержится k единиц
