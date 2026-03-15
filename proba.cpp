@@ -318,6 +318,8 @@ bool connectivity(std::vector<std::string> matrix, int n, std::vector<int>& degs
 
 
 std::vector<int> sigma_deg_vals(const std::vector<int>& deg_vals, int n, int& i, int& j){  // i and j are poses for P
+    i = 0;
+    j = 0;
     std::vector<int> new_deg_vals;
     if(deg_vals[0] > 1 && deg_vals[1] == 1){
         new_deg_vals.push_back(deg_vals[1]);
@@ -369,14 +371,14 @@ std::vector<std::string> matrix_with_new_v(std::vector<std::string> matrix, int 
         std::string new_str = str[i+1] + matrix[i];
         new_matrix.push_back(new_str);
     }
-    std::cout << "it is check\n";
-    print_matrix(new_matrix);
+//    std::cout << "it is check\n";
+//    print_matrix(new_matrix);
     return new_matrix;
 }
 
 
 void P_of_rows(std::vector<std::string>& matrix, int n, int i, int j){  // (i) <-> (j) 
-    if(i == 1 && j == 1) return;
+    if(i == -1 && j == -1) return;
     std::string tmp = matrix[i-1];
     matrix[i-1].clear();
     matrix[i-1] = matrix[j-1];
@@ -385,7 +387,7 @@ void P_of_rows(std::vector<std::string>& matrix, int n, int i, int j){  // (i) <
 }
 
 void P_of_cols(std::vector<std::string>& matrix, int n, int i, int j){  // [i] <-> [j]
-    if(i == 1 && j == 1) return;
+    if(i == -1 && j == -1) return;
     for(int k = 0; k < n; ++k){
         std::swap(matrix[k][i-1], matrix[k][j-1]);
     }
